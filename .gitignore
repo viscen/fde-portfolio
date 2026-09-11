@@ -1,0 +1,15 @@
+# Java
+target/
+*.class
+*.iml
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 密钥与本地配置
+.env
+*.local.yml
