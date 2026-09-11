@@ -1,6 +1,9 @@
 spring:
   application:
     name: llm-hello
+  main:
+    # CLI 应用无需 Web 服务器（spring-ai-openai 传入的 webflux 依赖会让 Boot 误判为 Reactive Web 应用）
+    web-application-type: none
   ai:
     openai:
       # 环境变量注入，不硬编码 key（面试展示时也是好习惯）
