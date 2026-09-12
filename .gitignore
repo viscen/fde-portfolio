@@ -13,3 +13,8 @@ __pycache__/
 # 密钥与本地配置
 .env
 *.local.yml
+
+# 运行时产物
+logs/
+**/logs/
+data/vector-store.json
