@@ -2,61 +2,39 @@
 
 面向 FDE / AI 解决方案岗位求职的可展示作品集。公司代码不可外带，本项目全部为脱敏重建，面试时用 GitHub + 演示视频替代"公司项目不能演示"的问题。
 
-## 规划（对应 16 周转型计划 Phase 1）
+**详细文档见 [docs/代码说明与用户手册.md](docs/代码说明与用户手册.md)**（代码结构、接口手册、实测样例、部署手册、踩坑记录）。
 
-| 序号 | 项目 | 技术点 | 状态 |
-|---|---|---|---|
-| 01 | llm-hello：多模型统一调用（Java/Python 双版） | OpenAI 兼容接口、SSE 流式、环境变量化 | ✅ 脚手架已建 |
-| 02 | rag-power-docs：电力规程/政策文档问答 | 文档解析、切分、Embedding、pgvector/Milvus、Rerank、引用溯源 | ⬜ 第 4-5 周 |
-| 03 | chatbi-lite：语义层问数（复刻公司 ChatBI 思路） | 语义建模（数据集/指标/维度）、NL→SQL、图表 | ⬜ 第 6 周 |
-| 04 | agent-tools：工具调用 Agent | Function Calling 循环、MCP、ReAct | ⬜ 第 6 周 |
-| 05 | eval-playbook：评测与 badcase 治理 | 评测集、指标、prompt 迭代 | ⬜ 第 7 周 |
+## 项目一览（2026-09 已推进一个月）
 
-## 第一步：跑通 01-llm-hello（转型计划 Day 7 任务）
+| 序号 | 目录 | 项目 | 技术点 | 状态 |
+|---|---|---|---|---|
+| 01 | 01-llm-hello | 多模型调用 Hello | OpenAI 兼容接口、SSE 流式、Java/Python 双栈 | ✅ |
+| 02 | 02-jmn-agent | 智能体服务（电力助手"电小二"） | **Function Calling、多轮会话记忆、SSE 流式、工具注册** | ✅ 已测试 |
+| 03 | 03-jmn-rag | 知识库 RAG 问答（电力营销知识库） | **文档分块、向量化双实现（本地兜底/OpenAI兼容切换）、余弦检索、带引用生成** | ✅ 已测试 |
+| 04 | （规划中） | ChatBI-Lite | 语义层建模（数据集/指标/维度）、NL2SQL、H2 | ⬜ 下月 |
+| 05 | （规划中） | 评测 Playbook | 评测集、badcase 归类、prompt 迭代 | ⬜ 下月 |
 
-### 准备一个模型入口（二选一）
+> 02/03 两个工程采用 tripod3 同款工程规范：三层 parent（jmn-xxx-parent + comm + main）、properties 配置、
+> RstObj 统一返回、XxxApi 业务域分包、assembly tar.gz 打包（conf 外置 + classpath 启动脚本）、knife4j 接口文档。
 
-**方式 A：DeepSeek API（推荐，最便宜且 OpenAI 兼容）**
-1. https://platform.deepseek.com 注册 → 充值 ¥10 → 创建 API Key
-2. Windows 设置环境变量（PowerShell）：
-```powershell
-setx LLM_API_KEY "sk-你的key"
-setx LLM_BASE_URL "https://api.deepseek.com"
-setx LLM_MODEL "deepseek-chat"
-# 重开终端生效
+## 快速体验
+
+环境变量：`LLM_API_KEY`、`LLM_BASE_URL`（不带/v1）、`LLM_MODEL`（详见手册 4.1）。
+
+```bat
+:: 智能体（Function Calling + 多轮）
+cd 02-jmn-agent && mvn install -DskipTests
+cd jmn-agent-main && mvn spring-boot:run
+:: 浏览器打开 http://localhost:8801/agent/be/doc.html
+
+:: RAG 问答
+cd 03-jmn-rag && mvn install -DskipTests
+cd jmn-rag-main && mvn spring-boot:run
+:: 先 POST http://localhost:8802/rag/be/api/rag/ingest 入库，再 /api/rag/ask 问答
 ```
-
-**方式 B：本地 Ollama（离线可跑）**
-```powershell
-winget install Ollama.Ollama
-ollama pull qwen2.5:7b
-```
-然后改用 Ollama 接入（见 01-llm-hello/java-spring-ai 内注释：把 openai starter 换成 ollama starter，base-url http://localhost:11434）。
-
-### 跑 Java 版（Spring AI）
-
-```powershell
-cd 01-llm-hello/java-spring-ai
-mvn spring-boot:run
-# 期望输出：一行关于 FDE 的中文回答
-```
-
-### 跑 Python 版
-
-```powershell
-cd 01-llm-hello/python
-pip install -r requirements.txt
-python main.py
-# 期望输出：流式逐字打印回答
-```
-
-### 跑通之后（Day 7 收尾）
-
-1. `git init && git add . && git commit -m "chore: init portfolio with llm-hello"` 
-2. GitHub 建同名仓库 push 上去（建议 public，脱敏无虞）
-3. 在本 README 顶部加一行：`> 面试演示视频：xx.mp4`（第 2 周做完 RAG 后录）
 
 ## 面试叙事锚点
 
-- 01 对应公司 tripod-llm 统一大模型组件经验（多模型接入/流式/Function Calling）
-- 02-05 逐步补齐 JD 高频要求：RAG → Agent/MCP → 评测（见 01-JD核对表 频次排序）
+- 02 对应"工具调用/Agent 编排"（JD 高频）；电力领域工具集模拟真实营销系统对接
+- 03 对应"RAG 全链路"；重点讲 embeddings 不可用时的**本地兜底策略**与 VectorStore 接口升级路径（Milvus/pgvector）
+- 两套工程展示工程化素养：统一返回封装、全局异常、knife4j 文档、conf 外置打包（生产交付视角）
